@@ -26,10 +26,10 @@ const style = {
 
 const Header = () => {
   const [selectedNav, setSelectedNav] = useState('home')
-  const { connectWallet, currentAccount, userBalance, getUserBalance } = useContext(TransactionContext)
+  const { connectWallet, currentAccount, userBalance } = useContext(TransactionContext)
   const [isActive, setIsActive] = useState(false)
-  console.log(userBalance)
 
+  
   return (
     <div
       style={{
@@ -110,7 +110,7 @@ const Header = () => {
               </div>
               <div className={`${style.accountNumber} ${style.dropDownItemBalance}`}>
                 <div className={style.newbuttonTextContainer}>
-                  {userBalance}
+                  {userBalance} ethers
                 </div>
               </div>
             </div>
@@ -118,7 +118,7 @@ const Header = () => {
         </div>
       ) : (
         <div
-          onClick={() => {getUserBalance();connectWallet(); }}
+          onClick={() => {connectWallet()}}
           className={`${style.button} w-40 ${style.buttonPadding}`}
         >
           <div className={`${style.buttonAccent} ${style.buttonPadding}`}>
