@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { ethers } from 'ethers'
 
 export const TransactionContext = React.createContext()
 
@@ -8,6 +9,7 @@ if (typeof window !== 'undefined') eth = window.ethereum
 
 export const TransactionProvider = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState()
+  const [userBalance, setUserBalance] = useState(0)
 
   useEffect(() => {
     checkIfWalletIsConnected()
@@ -35,12 +37,24 @@ export const TransactionProvider = ({ children }) => {
     }
   }
 
+  const getUserBalance = (accountAddress) => {
+    window.ethereum
+      .request({ method: 'eth_getBalance', params: [accountAddress, 'latest'] })
+      .then((balance) => {
+        setUserBalance(ethers.utils.formatEther(balance))
+      })
+      .catch((error) => {
+        setErrorMessage(error.message)
+      })
+  }
+
   return (
     <TransactionContext.Provider
       value={{
         currentAccount,
         connectWallet,
-        setCurrentAccount,
+        userBalance,
+        getUserBalance,
       }}
     >
       {children}
