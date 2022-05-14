@@ -20,7 +20,7 @@ const style = {
   newbutton: `flex flex-row w-36 justify-center items-center bg-[#CECECE] rounded-xl mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5`,
   newbuttonPadding: `p-2`,
   newbuttonTextContainer: `h-8 flex items-center`,
-  dropDownItem: `flex flex-row w-36 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  dropDownItem: `flex break-all flex-row w-36 h-28 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
 }
 
 const Header = () => {
@@ -103,15 +103,8 @@ const Header = () => {
           {isActive ? (
             <div>
               <div className={`${style.accountNumber} ${style.dropDownItem}`}>
-                <div
-                  className={style.newbuttonTextContainer}
-                >{`${currentAccount.slice(0, 8)}..${currentAccount.slice(
-                  36
-                )}`}</div>
-              </div>
-              <div className={`${style.accountNumber} ${style.dropDownItem}`}>
                 <div className={style.newbuttonTextContainer}>
-                  Disconnect ME
+                  {currentAccount}
                 </div>
               </div>
             </div>
