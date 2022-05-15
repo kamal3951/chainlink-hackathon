@@ -1,8 +1,7 @@
 //SPDX-License-Identifier:MIT
 pragma solidity >0.8.4;
 
-import "./UtilityTokenERC20.sol";
-import "./UtilityTokenERC721.sol";
+import "./UtilityToken.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,27 +13,10 @@ contract UniV3NftCollateral {
     //ERC20 allowed to lend
     IERC20 public lendingMoney;
 
-    //Utility Token to be given to lenders
-    UtilityToken ULTERC20;
-    //Utility Token for stakers
-    UtilityTokenERC721 ULTERC721;
-
     //all stakers
     address[] AllStakers;
-    //struct staking
-    struct staking {
-        address payable stakerAddress;
-        uint128 tokenIdStaked;
-        uint128 LoanAmount;
-    }
     //all lenders
     address[] AllLenders;
-    //struct lending
-    struct lending {
-        address payable lenderAddress;
-        uint128 amountLendedToProtocol;
-        uint128 returnRate;
-    }
 
     //Total worth of supplied nfts
     uint256 public totalTokenSupplyWorth;
@@ -43,19 +25,20 @@ contract UniV3NftCollateral {
     //money used for loan
     uint256 public totalLoanMoney;
 
-    //mapping of staker to a mapping of tokenIds owned
+    //mapping of staker to a mapping of tokenIds owned by the user
     mapping(address => uint256[]) NftsStakedByUser;
     //mapping of lender to lended amount
-    mapping(address => uint256) MoneyLendedByUser;
-
-    modifier updateReward(address account) {}
+    mapping(address => mappping(uin256 => uint256)) MoneyLendedByUser;
 
     constructor() {
         stakingToken = IERC721("0xC36442b4a4522E871399CD717aBDD847Ab11FE88");
         lendingMoney = IERC20("RINKEBY-ETH-ADDRESS");
     }
 
-    function lendMoney(uint256 amount) external returns (bool) {
+    function lendMoney(uint256 tokenId, uint256 amount)
+        external
+        returns (bool)
+    {
         AllLenders.push(msg.sender);
         MoneyLendedByUser[msg.sender] += amount;
         totalSupplyMoney += amount;
@@ -64,7 +47,6 @@ contract UniV3NftCollateral {
             address(this),
             amount
         );
-        //ULTERC20._mint(msg.sender, amount);
         if (!success) {
             revert Staking__TransferFailed();
         }
@@ -74,7 +56,6 @@ contract UniV3NftCollateral {
         require(amount <= MoneyLendedByUser[msg.sender]);
         MoneyLendedByUser[msg.sender] -= amount;
         bool success = lendingMoney.transfer(msg.sender, amount);
-        //ULTERC20._burn(msg.sender, amount);
         if (!success) {
             revert Staking__TransferFailed();
         }
