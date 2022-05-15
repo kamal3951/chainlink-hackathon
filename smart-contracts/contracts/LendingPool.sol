@@ -9,11 +9,9 @@ contract LendingPool {
 
     UtilityToken ULT;
 
-    struct reserve {
-        uint256 totalReserve;
-        uint256 lendedReserve;
-        uint256 idleReserve;
-    }
+    uint256 totalReserve;
+    uint256 lendedReserve;
+    uint256 idleReserve;
 
     function deposit(address asset, uint256 amount) external returns (bool) {}
 }
