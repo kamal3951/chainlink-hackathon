@@ -6,7 +6,7 @@ import "./UtilityTokenERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-error Staking__TransferFailed();
+error UniV3NftCollateral__TransferFailed();
 
 contract UniV3NftCollateral {
     //Token allowed to stake
@@ -66,7 +66,7 @@ contract UniV3NftCollateral {
         );
         //ULTERC20._mint(msg.sender, amount);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert UniV3NftCollateral__TransferFailed();
         }
     }
 
@@ -76,7 +76,7 @@ contract UniV3NftCollateral {
         bool success = lendingMoney.transfer(msg.sender, amount);
         //ULTERC20._burn(msg.sender, amount);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert UniV3NftCollateral__TransferFailed();
         }
     }
 
@@ -92,7 +92,7 @@ contract UniV3NftCollateral {
         );
         totalTokenSupplyWorth += uint256(stakingTokens[tokenId].liquidity);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert UniV3NftCollateral__TransferFailed();
         }
     }
 
@@ -105,7 +105,7 @@ contract UniV3NftCollateral {
         bool success = stakingToken[tokenId].safeTransfer(msg.sender, tokenId);
         totalTokenSupplyWorth -= uint256(stakingTokens[tokenId].liquidity);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert UniV3NftCollateral__TransferFailed();
         }
     }
 
