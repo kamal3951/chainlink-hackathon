@@ -1,83 +1,129 @@
 //SPDX-License-Identifier:MIT
 pragma solidity >0.8.4;
 
-import "./UtilityToken.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-error Staking__TransferFailed();
+error p2p__TransferFailed();
 
-contract UniV3NftCollateral {
+contract p2p is ReentrancyGuard {
     //Token allowed to stake
-    IERC721 public stakingTokens;
+    IERC721 public listingToken;
     //ERC20 allowed to lend
     IERC20 public lendingMoney;
 
-    //all stakers
-    address[] AllStakers;
-    //all lenders
-    address[] AllLenders;
+    //struct listing
+    struct listing {
+        address payable listerAddress;
+        uint128 tokenIdListed;
+        uint128 LoanAmount;
+        uint256 LoanTimePeriod;
+    }
+    //mapping of lister to listed struct
+    mapping(address => listing[]) listerAddressToListedStruct;
+
+    //struct lending
+    struct lending {
+        address payable lenderAddress;
+        uint256 tokenId;
+        uint128 amountLendedToNftOwner;
+        //uint128 returnRate;
+    }
+
+    //lender to lending
+    mapping(address => lending[]) lenderAddressToLendingStructArray;
 
     //Total worth of supplied nfts
     uint256 public totalTokenSupplyWorth;
-    //Total supplied money
-    uint256 public totalSupplyMoney;
+
     //money used for loan
     uint256 public totalLoanMoney;
 
-    //mapping of staker to a mapping of tokenIds owned by the user
-    mapping(address => uint256[]) NftsStakedByUser;
-    //mapping of lender to lended amount
-    mapping(address => mappping(uin256 => uint256)) MoneyLendedByUser;
+    //modifier updateReward(address account) {}
 
     constructor() {
-        stakingToken = IERC721("0xC36442b4a4522E871399CD717aBDD847Ab11FE88");
-        lendingMoney = IERC20("RINKEBY-ETH-ADDRESS");
+        listingToken = IERC721("0xC36442b4a4522E871399CD717aBDD847Ab11FE88"); //UniswapV3 Rinkeby Adddress
+        lendingMoney = IERC20("RINKEBY-DAI-ADDRESS"); //Rinkeby DAI Address
     }
 
-    function lendMoney(uint256 tokenId, uint256 amount)
-        external
-        returns (bool)
-    {
-        AllLenders.push(msg.sender);
-        MoneyLendedByUser[msg.sender] += amount;
-        totalSupplyMoney += amount;
+    function lendMoney(listing memory Listing) external returns (bool) {
+        lending storage Lending = lending(
+            msg.sender,
+            Listing.tokenIdListed,
+            Listing.LoanAmount
+        );
+
+        lenderAddressToLendingStructArray[msg.sender].push(Lending);
+
+        totalLoanMoney += Listing.LoanAmount;
+
         bool success = lendingMoney.transferFrom(
             msg.sender,
-            address(this),
-            amount
+            Listing.stakerAddress,
+            Listing.LoanAmount
         );
+
         if (!success) {
-            revert Staking__TransferFailed();
+            revert p2p__TransferFailed();
         }
     }
 
-    function withdrawMoney(uint256 amount) external returns (bool) {
+    /*function withdrawMoney(uint256 amount) external returns (bool) {
         require(amount <= MoneyLendedByUser[msg.sender]);
         MoneyLendedByUser[msg.sender] -= amount;
         bool success = lendingMoney.transfer(msg.sender, amount);
+        //ULTERC20._burn(msg.sender, amount);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert p2p__TransferFailed();
         }
-    }
+    }*/
 
-    function stakeNft(uint256 tokenId) external returns (bool) {
-        if (NftsStakedByUser[msg.sender].length == 0) {
-            AllStakers.push(msg.sender);
-        }
-        NftsStakedByUser[msg.sender].push(tokenId);
-        bool success = stakingTokens[tokenId].safeTransferFrom(
+    function listNft(
+        uint256 tokenId,
+        uint256 LoanAmount,
+        uint256 LoanTimePeriod
+    ) external returns (bool) {
+        //fetch the liquidity and set amount < 0.5 * liquidity
+        uint256 NftLiquidity = (
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            listingToken.position(tokenId),
+            ,
+            ,
+            ,
+
+        );
+        require(
+            LoanAmount < NftLiquidity / 2,
+            "You can not get loan of more than 50% worth of your position liquidity"
+        );
+        listing Listing = listing(
+            msg.sender,
+            tokenId,
+            LoanAmount,
+            LoanTimePeriod
+        );
+        bool success = listingToken[tokenId].safeTransferFrom(
             msg.sender,
             address(this),
             tokenId
         );
-        totalTokenSupplyWorth += uint256(stakingTokens[tokenId].liquidity);
+
+        listerAddressToListedStruct[msg.sender].push(Listing);
+
+        totalTokenSupplyWorth += uint256(NftLiquidity);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert p2p__TransferFailed();
         }
     }
 
-    function withdrawNft(uint256 tokenId) external returns (bool) {
+    /*function withdrawNft(uint256 tokenId) external returns (bool) {
         if (NftLendedByUser[msg.sender].length == 1) {
             NftsLendedByUser[msg.sender][tokenId].pop();
             AllLenders[msg.sender].pop();
@@ -86,9 +132,9 @@ contract UniV3NftCollateral {
         bool success = stakingToken[tokenId].safeTransfer(msg.sender, tokenId);
         totalTokenSupplyWorth -= uint256(stakingTokens[tokenId].liquidity);
         if (!success) {
-            revert Staking__TransferFailed();
+            revert p2p__TransferFailed();
         }
-    }
+    }*/
 
     function claimInterestOverLending() external returns (bool) {}
 }

@@ -3,12 +3,13 @@ pragma solidity >0.8.4;
 
 import "./UtilityTokenERC20.sol";
 import "./UtilityTokenERC721.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 error UniV3NftCollateral__TransferFailed();
 
-contract UniV3NftCollateral {
+contract UniV3NftCollateral is ReentrancyGaurd {
     //Token allowed to stake
     IERC721 public stakingTokens;
     //ERC20 allowed to lend

@@ -20,15 +20,16 @@ const style = {
   newbutton: `flex flex-row w-36 justify-center items-center bg-[#CECECE] rounded-xl mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5`,
   newbuttonPadding: `p-2`,
   newbuttonTextContainer: `h-8 flex items-center`,
-  dropDownItem: `flex break-all flex-row w-36 h-28 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  dropDownItemAccount: `flex break-all flex-row w-36 h-28 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  dropDownItemBalance: `flex break-all flex-row w-36 h-16 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
 }
 
 const Header = () => {
   const [selectedNav, setSelectedNav] = useState('home')
-  const { connectWallet, currentAccount } = useContext(TransactionContext)
+  const { connectWallet, currentAccount, userBalance } = useContext(TransactionContext)
   const [isActive, setIsActive] = useState(false)
-  console.log(currentAccount)
 
+  
   return (
     <div
       style={{
@@ -102,9 +103,14 @@ const Header = () => {
           </div>
           {isActive ? (
             <div>
-              <div className={`${style.accountNumber} ${style.dropDownItem}`}>
+              <div className={`${style.accountNumber} ${style.dropDownItemAccount}`}>
                 <div className={style.newbuttonTextContainer}>
                   {currentAccount}
+                </div>
+              </div>
+              <div className={`${style.accountNumber} ${style.dropDownItemBalance}`}>
+                <div className={style.newbuttonTextContainer}>
+                  {userBalance} ethers
                 </div>
               </div>
             </div>
@@ -112,7 +118,7 @@ const Header = () => {
         </div>
       ) : (
         <div
-          onClick={() => connectWallet()}
+          onClick={() => {connectWallet()}}
           className={`${style.button} w-40 ${style.buttonPadding}`}
         >
           <div className={`${style.buttonAccent} ${style.buttonPadding}`}>
