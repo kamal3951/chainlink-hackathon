@@ -60,7 +60,7 @@ contract p2p is ReentrancyGuard {
 
         bool success = lendingMoney.transferFrom(
             msg.sender,
-            Listing.stakerAddress,
+            Listing.listerAddress,
             Listing.LoanAmount
         );
 
@@ -85,23 +85,11 @@ contract p2p is ReentrancyGuard {
         uint256 LoanTimePeriod
     ) external returns (bool) {
         //fetch the liquidity and set amount < 0.5 * liquidity
-        uint256 NftLiquidity = (
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            listingToken.position(tokenId),
-            ,
-            ,
-            ,
-
-        );
+        uint256 NftLiquidity;
+        listingToken.position(tokenId) = (, , , , , , , NftLiquidity, , , , );
         require(
             LoanAmount < NftLiquidity / 2,
-            "You can not get loan of more than 50% worth of your position liquidity"
+            "You can not get loan of more than 50% worth of your position's liquidity"
         );
         listing Listing = listing(
             msg.sender,
