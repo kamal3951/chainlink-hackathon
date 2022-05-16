@@ -115,7 +115,7 @@ contract p2p is ReentrancyGuard {
         }
     }*/
 
-    function unstakeNFT() external returns (bool) {}
+    //function unstakeNFT() external returns (bool) {} //PS: not that important can be implemented at last
 
     //MAKE THIS FUNCTION TO AS REPAY-LOAN
     /*function withdrawNft(uint256 tokenId) external returns (bool) {
@@ -131,5 +131,5 @@ contract p2p is ReentrancyGuard {
         }
     }*/
 
-    function claimInterestOverLending() external returns (bool) {}
+    //function claimInterestOverLending() external returns (bool) {}
 }
