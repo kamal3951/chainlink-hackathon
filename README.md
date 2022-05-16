@@ -4,7 +4,7 @@ This porject implements peer-to-peer mechanicsm of giving out a loan and listing
 
 ## Borrowing Loan (Staking NFT)
 
-All the UniswapV3 LP NFTs are listed on the Borrow page, the user can list any of his NFT for a loan with specifiying the `LoanTime` and `LoanAmount`.
+All the UniswapV3 LP NFTs owned by the user are listed on the Borrow page, the user can list any of his NFT for a loan with specifiying the `LoanTime` and `LoanAmount`.
 The LoanAmount must be less than the 50% value of the LP Token i.e., NFT's underlying liquidity.
 
 ## Lending Money
