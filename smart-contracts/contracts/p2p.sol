@@ -163,5 +163,20 @@ contract p2p is ReentrancyGuard {
         require();
     }
 
+    function getAllNftsListedAvailableToBeStaked()
+        external
+        returns (listing[])
+    {
+        listing[] AllNftsListedAvailableToBeStaked;
+        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+            if (allListedNftsByTokenId[i].isStaked == false) {
+                AllNftsListedAvailableToBeStaked.push(
+                    allListedNftsByTokenId[i]
+                );
+            }
+        }
+        return AllNftsListedAvailableToBeStaked;
+    }
+
     //function claimInterestOverLending() external returns (bool) {}
 }

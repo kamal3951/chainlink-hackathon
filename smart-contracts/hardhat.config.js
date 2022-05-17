@@ -15,7 +15,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 
 //require('@nomiclabs/hardhat-ethers');
 module.exports = {
-  defaultNetwork: "rinkeby",
+  /*defaultNetwork: "rinkeby",
   networks: {
     hardhat: {
     },
@@ -23,9 +23,9 @@ module.exports = {
       url: process.env.RINKEBY_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     }
-  },
+  },*/
   solidity: {
-    version: "0.8.0",
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,
