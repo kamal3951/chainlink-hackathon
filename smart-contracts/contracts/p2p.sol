@@ -5,8 +5,12 @@ import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+
 import "../node_modules/@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+
 import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import "./interfaces/Ip2p.sol";
 
 error p2p__TransferFailed();
 
@@ -51,6 +55,9 @@ contract p2p is ReentrancyGuard {
         lendingMoney = IERC20(_lendingMoneyAddress); //Rinkeby DAI Address
     }
 
+    event ListNft(uint256 tokenId, uint256 LoanAmount, uint256 LoanTimePeriod);
+    event LendMoney(listing Listing);
+
     function listNft(
         uint256 tokenId,
         uint256 LoanAmount,
@@ -81,6 +88,8 @@ contract p2p is ReentrancyGuard {
         if (!success) {
             revert p2p__TransferFailed();
         }
+
+        emit ListNft(tokenId, LoanAmount, LoanTimePeriod);
     }
 
     function lendMoney(listing memory Listing) external returns (bool) {
@@ -103,6 +112,8 @@ contract p2p is ReentrancyGuard {
         if (!success) {
             revert p2p__TransferFailed();
         }
+
+        emit LendMoney(Listing);
     }
 
     /*function withdrawMoney(uint256 amount) external returns (bool) {
