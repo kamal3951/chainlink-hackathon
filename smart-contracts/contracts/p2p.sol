@@ -10,17 +10,17 @@ import "../node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 import "../node_modules/@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
-//import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 //error p2p__TransferFailed();
 
-contract p2p is IERC721Receiver {
+contract p2p is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
-    Counters.Counter private _ourContractTokenId;
+    Counters.Counter private _listingId;
     Counters.Counter private _listedItems;
     Counters.Counter private _stakedItems;
 
@@ -63,25 +63,22 @@ contract p2p is IERC721Receiver {
     //Total worth of supplied nfts
     uint256 public totalTokenSupplyWorth;
 
-    //money used for loan
+    //Total money supplied for loan
     uint256 public totalLoanMoney;
 
     constructor(address _listingTokenAddress) {
         listingToken = INonfungiblePositionManager(_listingTokenAddress);
-        //UniswapV3 Rinkeby Adddress 0xC36442b4a4522E871399CD717aBDD847Ab11FE88
+        //UniswapV3 Kovan Adddress
         lendingMoney = IERC20(0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa);
-        //Rinkeby DAI Address
+        //Kovan DAI Address
     }
-
-    // event ListNft(uint256 tokenId, uint256 LoanAmount, uint256 LoanTimePeriod);
-    // event LendMoney(listing Listing);
 
     function listNft(
         uint256 tokenId,
         uint256 LoanAmount,
         uint256 LoanTimePeriod
-    ) external {
-        _ourContractTokenId.increment();
+    ) external nonReentrant {
+        _listingId.increment();
         _listedItems.increment();
 
         //fetch the liquidity and set amount < 0.5 * liquidity
@@ -92,24 +89,20 @@ contract p2p is IERC721Receiver {
             "You can not get loan of more than 50% worth of your position's liquidity"
         );
 
-        address _ownerOfTokenId = listingToken.ownerOf(tokenId);
         listingToken.approve(address(this), tokenId);
-        listingToken.safeTransferFrom(_ownerOfTokenId, address(this), tokenId);
-        //IERC721(0xC36442b4a4522E871399CD717aBDD847Ab11FE88).safeTransferFrom(from, to, tokenId);
+        listingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
-        allListedNftsByTokenId[_ourContractTokenId.current()] = listing(
+        allListedNftsByTokenId[_listingId.current()] = listing(
             payable(msg.sender),
             tokenId,
             LoanAmount,
             LoanTimePeriod,
-            _ourContractTokenId.current(),
+            _listingId.current(),
             false,
             payable(msg.sender)
         );
 
         totalTokenSupplyWorth += uint256(NftLiquidity);
-
-        // emit ListNft(tokenId, LoanAmount, LoanTimePeriod);
     }
 
     function onERC721Received(
@@ -124,12 +117,8 @@ contract p2p is IERC721Receiver {
             );
     }
 
-    function lendMoney(uint256 ourContractTokenId)
-        external
-        payable
-        returns (bool)
-    {
-        listing storage _listing = allListedNftsByTokenId[ourContractTokenId];
+    function lendMoney(uint256 listingId) external payable returns (bool) {
+        listing storage _listing = allListedNftsByTokenId[listingId];
         require(
             msg.value == _listing.LoanAmount,
             "Please supply the sufficient loan amount"
@@ -144,18 +133,19 @@ contract p2p is IERC721Receiver {
 
         lendingMoney.approve(
             address(this),
-            allListedNftsByTokenId[ourContractTokenId].LoanAmount
+            allListedNftsByTokenId[listingId].LoanAmount
         );
 
         bool success = lendingMoney.transferFrom(
             msg.sender,
             address(this),
-            allListedNftsByTokenId[ourContractTokenId].LoanAmount
+            allListedNftsByTokenId[listingId].LoanAmount
         );
 
         return success;
     }
 
+    //Getter functions
     function getLoansDispersedByUser() external returns (listing[] memory) {
         listing[] memory ListingThatIsLended;
         _userLoanCount.reset();
@@ -204,7 +194,6 @@ contract p2p is IERC721Receiver {
         return listedAndStaked;
     }
 
-    //MAKE THIS FUNCTION TO AS REPAY-LOAN
     function getAllNftsListedAvailableToBeStaked()
         external
         returns (listing[] memory)
@@ -220,6 +209,4 @@ contract p2p is IERC721Receiver {
         }
         return AllNftsListedAvailableToBeStaked;
     }
-
-    //function claimInterestOverLending() external returns (bool) {}
 }
