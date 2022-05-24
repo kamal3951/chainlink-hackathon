@@ -16,7 +16,7 @@ import "../node_modules/@uniswap/v3-periphery/contracts/interfaces/INonfungibleP
 
 import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-//error p2p__TransferFailed();
+error p2p__TransferFailed();
 
 contract p2p is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -89,7 +89,8 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
             "You can not get loan of more than 50% worth of your position's liquidity"
         );
 
-        listingToken.approve(address(this), tokenId);
+        //listingToken.approve(address(this), tokenId);
+        //approving will be done from frontend
         listingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         allListedNftsByTokenId[_listingId.current()] = listing(
