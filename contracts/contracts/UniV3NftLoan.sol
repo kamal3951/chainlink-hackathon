@@ -150,7 +150,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getLoansDispersedByUser() external returns (listing[] memory) {
         listing[] memory ListingThatIsLended;
         _userLoanCount.reset();
-        for (uint256 i = 0; i < listingId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (allListedNftsByTokenId[i].stakedTo == msg.sender) {
                 ListingThatIsLended[
                     _userLoanCount.current()
@@ -164,7 +164,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getListedNftsByUser() external returns (listing[] memory) {
         listing[] memory listedButNotStakedYet;
         _userListingCount.reset();
-        for (uint256 i = 0; i < listingId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (
                 allListedNftsByTokenId[i].listerAddress == msg.sender &&
                 allListedNftsByTokenId[i].isStaked == false
@@ -181,7 +181,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getStakedNftsByUser() external returns (listing[] memory) {
         listing[] memory listedAndStaked;
         _userStakingCount.reset();
-        for (uint256 i = 0; i < listingId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (
                 allListedNftsByTokenId[i].listerAddress == msg.sender &&
                 allListedNftsByTokenId[i].isStaked == true
@@ -201,7 +201,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     {
         listing[] memory AllNftsListedAvailableToBeStaked;
         _allNftsAvailableToBeStakedCount.reset();
-        for (uint256 i = 0; i < listingId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (allListedNftsByTokenId[i].isStaked == false) {
                 AllNftsListedAvailableToBeStaked[
                     _allNftsAvailableToBeStakedCount.current()
