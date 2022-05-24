@@ -1,12 +1,13 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import Image from 'next/image'
-import { AiOutlineDown } from 'react-icons/ai'
+import Link from 'next/link'
+import { useMoralis } from 'react-moralis'
 import { TransactionContext } from '../context/TransactionContext'
 
 const style = {
   wrapper: `w-screen flex justify-center items-start`,
   headerLogo: `flex w-1/4 items-center justify-start`,
-  nav: `flex-1 flex justify-center items-center`,
+  nav: `flex-1 mr-40 flex justify-center items-center`,
   navItemsContainer: `flex bg-[#CECECE] rounded-3xl`,
   navItem: `px-4 py-2 m-1 flex items-center text-lg font-semibold text-[0.9rem] cursor-pointer rounded-3xl`,
   activeNavItem: `bg-[#1A1A1D] text-white border`,
@@ -17,19 +18,24 @@ const style = {
   buttonIconContainer: `flex items-center justify-center w-8 h-8`,
   buttonAccent: `bg-[#CECECE] hover:border-[#FFFFFF] hover:bg-[#1A1A1D] hover:text-white h-full rounded-2xl flex items-center justify-center text-black`,
   accountNumber: `hover:bg-[#1A1A1D] hover:text-white border hover:border-[#FFFFFF]`,
-  newbutton: `flex flex-row w-36 justify-center items-center bg-[#CECECE] rounded-xl mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5`,
+  newbutton: `flex flex-row w-40 justify-center items-center bg-[#CECECE] rounded-xl mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5`,
   newbuttonPadding: `p-2`,
-  newbuttonTextContainer: `h-8 flex items-center`,
-  dropDownItemAccount: `flex break-all flex-row w-36 h-28 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
-  dropDownItemBalance: `flex break-all flex-row w-36 h-16 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  newbuttonTextContainer: `h-4 flex items-center`,
+  dropDownItemAccount: `flex break-all flex-row w-40 h-16 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  dropDownItemBalance: `flex break-all flex-row w-40 h-8 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
 }
 
 const Header = () => {
   const [selectedNav, setSelectedNav] = useState('home')
-  const { connectWallet, currentAccount, userBalance } = useContext(TransactionContext)
   const [isActive, setIsActive] = useState(false)
+  const { isAuthenticated, user } = useMoralis()
+  const {logIn, logOut} = useContext(TransactionContext)
 
   
+  useEffect(() => {
+    const newSelected = JSON.parse(localStorage.getItem('user') || '{}')
+    setSelectedNav(newSelected)
+  })
   return (
     <div
       style={{
@@ -37,6 +43,7 @@ const Header = () => {
         paddingTop: 16,
         alignItems: 'flex-start',
         justifyContent: 'space-around',
+        height: 140,
       }}
     >
       <div className={style.wrapper}>
@@ -45,45 +52,47 @@ const Header = () => {
         </div>
         <div className={style.nav}>
           <div className={style.navItemsContainer}>
-            <div
-              onClick={() => setSelectedNav('home')}
-              className={`${style.navItem} ${
-                selectedNav === 'home' && style.activeNavItem
-              }`}
-            >
-              Home
-            </div>
-            <div
-              onClick={() => setSelectedNav('lend')}
-              className={`${style.navItem} ${
-                selectedNav === 'lend' && style.activeNavItem
-              }`}
-            >
-              Lend
-            </div>
-            <div
-              onClick={() => setSelectedNav('borrow')}
-              className={`${style.navItem} ${
-                selectedNav === 'borrow' && style.activeNavItem
-              }`}
-            >
-              Borrow
-            </div>
+            <Link href="/">
+              <div
+                onClick={() =>
+                  localStorage.setItem('user', JSON.stringify('home'))
+                }
+                className={`${style.navItem} ${
+                  selectedNav === 'home' && style.activeNavItem
+                }`}
+              >
+                Home
+              </div>
+            </Link>
+            <Link href="/lend">
+              <div
+                onClick={() =>
+                  localStorage.setItem('user', JSON.stringify('lend'))
+                }
+                className={`${style.navItem} ${
+                  selectedNav === 'lend' && style.activeNavItem
+                }`}
+              >
+                Lend
+              </div>
+            </Link>
+            <Link href="/borrow">
+              <div
+                onClick={() =>
+                  localStorage.setItem('user', JSON.stringify('borrow'))
+                }
+                className={`${style.navItem} ${
+                  selectedNav === 'borrow' && style.activeNavItem
+                }`}
+              >
+                Borrow
+              </div>
+            </Link>
           </div>
         </div>
-        <div className={style.buttonsContainer}>
-          <div className={`${style.button} ${style.buttonPadding}`}>
-            <div className={style.buttonIconContainer}>
-              <Image src="/eth.png" alt="eth logo" height={20} width={20} />
-            </div>
-            <p>Ethereum</p>
-            <div className={style.buttonIconContainer}>
-              <AiOutlineDown />
-            </div>
-          </div>
-        </div>
+        <div className={style.buttonsContainer}></div>
       </div>
-      {currentAccount ? (
+      {isAuthenticated ? (
         <div
           style={{
             display: 'flex',
@@ -103,14 +112,18 @@ const Header = () => {
           </div>
           {isActive ? (
             <div>
-              <div className={`${style.accountNumber} ${style.dropDownItemAccount}`}>
+              <div
+                className={`${style.accountNumber} ${style.dropDownItemAccount}`}
+              >
                 <div className={style.newbuttonTextContainer}>
-                  {currentAccount}
+                  {user?.get('ethAddress')}
                 </div>
               </div>
-              <div className={`${style.accountNumber} ${style.dropDownItemBalance}`}>
-                <div className={style.newbuttonTextContainer}>
-                  {userBalance} ethers
+              <div
+                className={`${style.accountNumber} ${style.dropDownItemBalance}`}
+              >
+                <div className={style.newbuttonTextContainer} onClick={logOut}>
+                  Log Out
                 </div>
               </div>
             </div>
@@ -118,7 +131,9 @@ const Header = () => {
         </div>
       ) : (
         <div
-          onClick={() => {connectWallet()}}
+          onClick={() => {
+            logIn()
+          }}
           className={`${style.button} w-40 ${style.buttonPadding}`}
         >
           <div className={`${style.buttonAccent} ${style.buttonPadding}`}>

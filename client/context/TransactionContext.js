@@ -1,63 +1,35 @@
-import React, { useState, useEffect } from 'react'
-import { ethers } from 'ethers'
+import React, { useState } from 'react'
+import { useMoralis } from 'react-moralis'
 
 export const TransactionContext = React.createContext()
 
-let eth
-
-if (typeof window !== 'undefined') eth = window.ethereum
-
 export const TransactionProvider = ({ children }) => {
-  const [currentAccount, setCurrentAccount] = useState()
-  const [userBalance, setUserBalance] = useState()
-
-  useEffect(() => {
-    checkIfWalletIsConnected()
-  }, [])
-
-  const connectWallet = async (metamask = eth) => {
+  const [currentUser, setCurrentUser] = useState()
+  const { authenticate, isAuthenticated, user, logout } = useMoralis()
+  const logIn = async () => {
     try {
-      if (metamask) {
-        const accounts = await metamask.request({
-          method: 'eth_requestAccounts',
-        })
-        setCurrentAccount(accounts[0])
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const signer = provider.getSigner()
-        const balance = await signer.getBalance()
-        setUserBalance(ethers.utils.formatEther(balance._hex))
+      if (!isAuthenticated) {
+        await authenticate()
+        let newUser = user
+        setCurrentUser(newUser)
       }
-    } catch (err) {
-      console.error(err)
-      throw new Error('No Ethereum Object')
+    } catch (error) {
+      console.log(error)
     }
   }
 
-  const checkIfWalletIsConnected = async (metamask = eth) => {
+  const logOut = async () => {
     try {
-      if (!metamask) return alert('Please install metamask')
-      const accounts = await metamask.request({ method: 'eth_accounts' })
-      if (accounts.length) {
-        setCurrentAccount(accounts[0])
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const signer = provider.getSigner()
-        const balance = await signer.getBalance()
-        setUserBalance(ethers.utils.formatEther(balance._hex))
+      if (isAuthenticated) {
+        await logout()
       }
     } catch (error) {
-      console.error(error)
-      throw new Error('No ethereum object.')
+      console.log(error)
     }
   }
 
   return (
-    <TransactionContext.Provider
-      value={{
-        currentAccount,
-        connectWallet,
-        userBalance,
-      }}
-    >
+    <TransactionContext.Provider value={{ logIn, currentUser, logOut }}>
       {children}
     </TransactionContext.Provider>
   )
