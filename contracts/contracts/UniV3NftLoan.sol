@@ -201,7 +201,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     {
         listing[] memory AllNftsListedAvailableToBeStaked;
         _allNftsAvailableToBeStakedCount.reset();
-        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+        for (uint256 i = 0; i < listingId.current(); i++) {
             if (allListedNftsByTokenId[i].isStaked == false) {
                 AllNftsListedAvailableToBeStaked[
                     _allNftsAvailableToBeStakedCount.current()
