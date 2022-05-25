@@ -10,7 +10,7 @@ export const TransactionProvider = ({ children }) => {
     try {
       if (!isAuthenticated) {
         await authenticate()
-        let newUser = user
+        let newUser = user.get('ethAddress')
         setCurrentUser(newUser)
       }
     } catch (error) {

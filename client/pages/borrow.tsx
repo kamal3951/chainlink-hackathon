@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import Header from '../components/Header'
 import { useMoralis, useMoralisWeb3Api } from 'react-moralis'
+import { TransactionContext } from '../context/TransactionContext'
 
 const style = {
   wrapper: `bg-[#1A1A1D] h-auto min-h-screen text-black select-none flex flex-col`,
@@ -14,24 +15,26 @@ const style = {
 
 function fixUrl(url: string){
   if(url?.startsWith("ipfs")){
-    return "https://ipfs.moralis.io:2053/ipfs/"+url?.split("ipfs://ipfs/")?.slice(-1)
+    return "https://ipfs.moralis.io:2053/ipfs/"+url?.split("ipfs://")?.slice(-1)
   } else {
-    return url+"?format=json"
+    return url
   }
 }
 
 
 
 const NFTCard = ({ nft }) => {
-  const nftData = JSON.parse(nft?.metadata)
+  const nftData = JSON?.parse(nft?.metadata)
   console.log(nftData)
+  console.log(fixUrl(nftData?.image))
+  
 
   return (
     <div className={style.nftCardContainer}>
       <div className={style.nftImageContainer}>
         <img
           className={style.nftImage}
-          src={fixUrl(nftData?.image)}
+          src={fixUrl(nftData?.image?.trim())}
           alt="cannot display image"
         />
       </div>
@@ -42,23 +45,21 @@ const NFTCard = ({ nft }) => {
 }
 
 const Borrow = () => {
-  const { isInitialized } = useMoralis()
+  const { isInitialized, user } = useMoralis()
   const Web3Api = useMoralisWeb3Api()
   const [userEthNFTs, setUserEthNFTs] = useState()
   useEffect(() => {
     if (isInitialized) {
       const options = {
         chain: 'eth',
-        address: '0xec3CdB6750d28abA0A7A044aa47e5A6Bd7A88A75',
-        //   address: `${_currentUser}`,
+        address: '0x7d6980fA5a4762E20B52Fc7264d9853fe856B69b',
+        // address: `${user?.get('ethAddress')}`,
       }
       Web3Api.account.getNFTs(options).then((res) => {
         setUserEthNFTs(res?.result)
       })
     }
   }, [isInitialized])
-
-  console.log(userEthNFTs)
 
   return (
     <div className={style.wrapper}>
