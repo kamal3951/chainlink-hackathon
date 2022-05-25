@@ -13,9 +13,9 @@ const style = {
   nftCardContainer: `flex flex-col items-center justify-around mx-5 mb-5 mt-7 border bg-[#0f0e0e] rounded-md w-72 h-96 hover:shadow-2xl hover:border-stone-400`,
 }
 
-function fixUrl(url: string){
-  if(url?.startsWith("ipfs")){
-    return "https://ipfs.moralis.io:2053/ipfs/"+url?.split("ipfs://")?.slice(-1)
+function fixUrl(url: string) {
+  if (url?.startsWith("ipfs")) {
+    return "https://ipfs.moralis.io:2053/ipfs/" + url?.split("ipfs://")?.slice(-1)
   } else {
     return url
   }
@@ -24,11 +24,11 @@ function fixUrl(url: string){
 
 
 const NFTCard = ({ nft }) => {
-  if(!nft?.metadata) return <></>
+  if (!nft?.metadata) return <></>
   const nftData = JSON?.parse(nft?.metadata)
   console.log(nftData)
   console.log(fixUrl(nftData?.image))
-  
+
 
   return (
     <div className={style.nftCardContainer}>
@@ -52,8 +52,8 @@ const Borrow = () => {
   useEffect(() => {
     if (isInitialized) {
       const options = {
-        chain: 'eth',
-        address: '0x7d6980fA5a4762E20B52Fc7264d9853fe856B69b',
+        chain: 'rinkeby',
+        address: '0x6Db7787De4FF0C9500720d8eA22e2031C51a5f90',
         // address: `${user?.get('ethAddress')}`,
       }
       Web3Api.account.getNFTs(options).then((res) => {
