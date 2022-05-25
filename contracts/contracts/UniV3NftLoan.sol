@@ -16,7 +16,7 @@ import "../node_modules/@uniswap/v3-periphery/contracts/interfaces/INonfungibleP
 
 import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-//error p2p__TransferFailed();
+error p2p__TransferFailed();
 
 contract p2p is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -40,10 +40,10 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     //struct listing
     struct listing {
         address listerAddress;
-        uint256 tokenIdListed;
+        uint256 tokenId;
         uint256 LoanAmount;
         uint256 LoanTimePeriod;
-        uint256 ourContractTokenId;
+        uint256 listingId;
         bool isStaked;
         address stakedTo;
     }
@@ -53,7 +53,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
         uint256 tokenIdListed,
         uint256 LoanAmount,
         uint256 LoanTimePeriod,
-        uint256 ourContractTokenId,
+        uint256 lisitngId,
         bool isStaked,
         address stakedTo
     );
@@ -89,7 +89,8 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
             "You can not get loan of more than 50% worth of your position's liquidity"
         );
 
-        listingToken.approve(address(this), tokenId);
+        //listingToken.approve(address(this), tokenId);
+        //approving will be done from frontend
         listingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
         allListedNftsByTokenId[_listingId.current()] = listing(
@@ -149,7 +150,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getLoansDispersedByUser() external returns (listing[] memory) {
         listing[] memory ListingThatIsLended;
         _userLoanCount.reset();
-        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (allListedNftsByTokenId[i].stakedTo == msg.sender) {
                 ListingThatIsLended[
                     _userLoanCount.current()
@@ -163,7 +164,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getListedNftsByUser() external returns (listing[] memory) {
         listing[] memory listedButNotStakedYet;
         _userListingCount.reset();
-        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (
                 allListedNftsByTokenId[i].listerAddress == msg.sender &&
                 allListedNftsByTokenId[i].isStaked == false
@@ -180,7 +181,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     function getStakedNftsByUser() external returns (listing[] memory) {
         listing[] memory listedAndStaked;
         _userStakingCount.reset();
-        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (
                 allListedNftsByTokenId[i].listerAddress == msg.sender &&
                 allListedNftsByTokenId[i].isStaked == true
@@ -200,7 +201,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
     {
         listing[] memory AllNftsListedAvailableToBeStaked;
         _allNftsAvailableToBeStakedCount.reset();
-        for (uint256 i = 0; i < _ourContractTokenId.current(); i++) {
+        for (uint256 i = 0; i < _listingId.current(); i++) {
             if (allListedNftsByTokenId[i].isStaked == false) {
                 AllNftsListedAvailableToBeStaked[
                     _allNftsAvailableToBeStakedCount.current()

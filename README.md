@@ -1,3 +1,5 @@
+[![built-with openzeppelin](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://docs.openzeppelin.com/)
+
 # UniswapV3 NFTs as a collateral for loans
 
 This porject implements peer-to-peer mechanicsm of giving out a loan and listing an UniswapV3 NFT as a collateral.
