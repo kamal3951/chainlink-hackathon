@@ -24,6 +24,7 @@ function fixUrl(url: string){
 
 
 const NFTCard = ({ nft }) => {
+  if(!nft?.metadata) return <></>
   const nftData = JSON?.parse(nft?.metadata)
   console.log(nftData)
   console.log(fixUrl(nftData?.image))

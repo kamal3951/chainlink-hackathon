@@ -10,6 +10,7 @@ const Lend = () => {
     <div className={`${style.wrapper}`}>
       <Header />
       <div>this is lend page</div>
+      <video src="https://ipfs.moralis.io:2053/ipfs/QmaD8X74xPhJy75X1uwCLWdd4Grs3yE29uyvWcaF3FiP2L/nft.mp4"/>
     </div>
   )
 }
