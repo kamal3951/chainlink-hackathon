@@ -5,7 +5,7 @@ import { useMoralis } from 'react-moralis'
 import { TransactionContext } from '../context/TransactionContext'
 
 const style = {
-  wrapper: `w-screen flex justify-center items-start`,
+  wrapper: `w-3/4 flex justify-center items-start`,
   headerLogo: `flex w-1/4 items-center justify-start`,
   nav: `flex-1 mr-40 flex justify-center items-center`,
   navItemsContainer: `flex bg-[#CECECE] rounded-3xl`,
@@ -20,18 +20,18 @@ const style = {
   accountNumber: `hover:bg-[#1A1A1D] hover:text-white border hover:border-[#FFFFFF]`,
   newbutton: `flex flex-row w-40 justify-center items-center bg-[#CECECE] rounded-xl mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5`,
   newbuttonPadding: `p-2`,
-  newbuttonTextContainer: `h-4 flex items-center`,
+  newbuttonTextContainer: `flex items-center`,
   dropDownItemAccount: `flex break-all flex-row w-40 h-16 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
   dropDownItemBalance: `flex break-all flex-row w-40 h-8 justify-center items-center bg-[#CECECE] rounded-lg mx-2 text-[0.9rem] font-semibold cursor-pointer border mb-0.5 p-2`,
+  repayLoan: `w-28 flex items-center justify-center`,
 }
 
 const Header = () => {
   const [selectedNav, setSelectedNav] = useState('home')
   const [isActive, setIsActive] = useState(false)
   const { isAuthenticated, user } = useMoralis()
-  const {logIn, logOut} = useContext(TransactionContext)
+  const { logIn, logOut } = useContext(TransactionContext)
 
-  
   useEffect(() => {
     const newSelected = JSON.parse(localStorage.getItem('user') || '{}')
     setSelectedNav(newSelected)
@@ -91,6 +91,11 @@ const Header = () => {
           </div>
         </div>
         <div className={style.buttonsContainer}></div>
+      </div>
+      <div className={`${style.newbutton} ${style.newbuttonPadding} ${style.accountNumber}`}>
+        <div className={style.repayLoan}>
+          <span>Repay Loan</span>
+        </div>
       </div>
       {isAuthenticated ? (
         <div

@@ -5,8 +5,8 @@ import { MoralisProvider } from 'react-moralis'
 function MyApp({ Component, pageProps }) {
   return (
     <MoralisProvider
-      appId="0Hvg7s3GkosqLnJz2Zhn2cNzUnjrJCAJioaFQGVJ"
-      serverUrl="https://fkf53bqkcrqn.usemoralis.com:2053/server"
+      appId="z52FQV47PhI0MC1pudMkL00JLcpj9ZnFd4ij0Vbo"
+      serverUrl="https://peebfq2qsx6g.usemoralis.com:2053/server"
     >
       <TransactionProvider>
         <Component {...pageProps} />
@@ -16,3 +16,4 @@ function MyApp({ Component, pageProps }) {
 }
 
 export default MyApp
+
