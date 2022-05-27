@@ -132,7 +132,7 @@ const NFTCard = ({ nft, label }) => {
 }
 
 const Borrow = () => {
-  const { isInitialized, isWeb3Enabled, enableWeb3 } = useMoralis()
+  const { isInitialized, user,  isWeb3Enabled, enableWeb3 } = useMoralis()
   const Web3Api = useMoralisWeb3Api()
   const [userEthNFTs, setUserEthNFTs] = useState()
   useEffect(() => {
@@ -142,8 +142,8 @@ const Borrow = () => {
     if (isInitialized) {
       const options = {
         chain: 'rinkeby',
-        address: '0xCaE2DBf72cABfC7ee135256ff56FDc216a2a419A',
-        // address: `${user?.get('ethAddress')}`,
+        // address: '0xCaE2DBf72cABfC7ee135256ff56FDc216a2a419A',
+        address: `${user?.get('ethAddress')}`,
       }
       Web3Api.account.getNFTs(options).then((res) => {
         setUserEthNFTs(res?.result)
