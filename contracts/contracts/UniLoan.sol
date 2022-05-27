@@ -76,7 +76,7 @@ contract UniLoan is IERC721Receiver {
         });
     }
 
-    function findPosition(uint256 id)
+    function findLiq(uint256 id)
         external
         view
         returns (address owner, uint128 liquidity)
@@ -151,6 +151,6 @@ contract UniLoan is IERC721Receiver {
     function retrieveLenderData(address lender, uint256 tokenId) public {
         // transfer loan amount to borrower
         address borrower = tokenIdToBorrower[tokenId];
-        borrowerToLender[borrower] = tokenId;
+        borrowerToLender[borrower] = lender;
     }
 }
