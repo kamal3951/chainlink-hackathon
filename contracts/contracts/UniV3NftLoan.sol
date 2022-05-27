@@ -11,11 +11,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "./UniLoan.sol";
-
 //error p2p__TransferFailed();
 
-contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard, UniLoan {
+contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _listingId;
     Counters.Counter private _listedItems;
@@ -68,19 +66,6 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard, UniLoan {
     //Total money supplied for loan
     uint256 public totalLoanMoney;
 
-    using Counters for Counters.Counter;
-    Counters.Counter private _listingId;
-    Counters.Counter private _listedItems;
-    Counters.Counter private _stakedItems;
-
-    Counters.Counter _userLoanCount;
-    Counters.Counter _userListingCount;
-    Counters.Counter _userStakingCount;
-
-    Counters.Counter _allNftsAvailableToBeStakedCount;
-
-    address payable owner;
-
     function listNft(
         uint256 tokenId,
         uint256 LoanTimePeriod,
@@ -123,8 +108,8 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard, UniLoan {
         payable
         returns (bool)
     {
-        listingId = tokenIdToListingId[tokenId];
-        listing storage _listing = allListedNftsByTokenId[listingId];
+        uint256 listingId = tokenIdToListingId[tokenId];
+        listing storage _listing = allListedNftsByListingId[listingId];
         require(
             msg.value == _listing.LoanAmount,
             "Please supply the sufficient loan amount"
@@ -135,7 +120,6 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard, UniLoan {
         );
 
         _listing.isStaked = true;
-        _listing.stakedTo = lender;
 
         bool success = lendingMoney.transferFrom(
             lender,
@@ -147,51 +131,51 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard, UniLoan {
     }
 
     //Getter functions
-    function getLoansDispersedByUser() external returns (listing[] memory) {
-        listing[] memory ListingThatIsLended;
-        _userLoanCount.reset();
-        for (uint256 i = 0; i < _listingId.current(); i++) {
-            if (allListedNftsByListingId[i].stakedTo == msg.sender) {
-                ListingThatIsLended[
-                    _userLoanCount.current()
-                ] = allListedNftsByTokenId[i];
-            }
-            _userLoanCount.increment();
-        }
-        return ListingThatIsLended;
-    }
+    // function getLoansDispersedByUser() external returns (listing[] memory) {
+    //     listing[] memory ListingThatIsLended;
+    //     _userLoanCount.reset();
+    //     // for (uint256 i = 0; i < _listingId.current(); i++) {
+    //     //     if (allListedNftsByListingId[i].stakedTo == msg.sender) {
+    //     //         ListingThatIsLended[
+    //     //             _userLoanCount.current()
+    //     //         ] = allListedNftsByListingId[i];
+    //     //     }
+    //     //     _userLoanCount.increment();
+    //     // }
+    //     return ListingThatIsLended;
+    // }
 
-    function getListedNftsByUser() external returns (listing[] memory) {
-        listing[] memory listedButNotStakedYet;
-        _userListingCount.reset();
-        for (uint256 i = 0; i < _listingId.current(); i++) {
-            if (
-                allListedNftsByListingId[i].listerAddress == msg.sender &&
-                allListedNftsByListingId[i].isStaked == false
-            ) {
-                listedButNotStakedYet[
-                    _userListingCount.current()
-                ] = allListedNftsByListingId[i];
-            }
-            _userListingCount.increment();
-        }
-        return listedButNotStakedYet;
-    }
+    // function getListedNftsByUser() external returns (listing[] memory) {
+    //     listing[] memory listedButNotStakedYet;
+    //     _userListingCount.reset();
+    //     for (uint256 i = 0; i < _listingId.current(); i++) {
+    //         if (
+    //             allListedNftsByListingId[i].listerAddress == msg.sender &&
+    //             allListedNftsByListingId[i].isStaked == false
+    //         ) {
+    //             listedButNotStakedYet[
+    //                 _userListingCount.current()
+    //             ] = allListedNftsByListingId[i];
+    //         }
+    //         _userListingCount.increment();
+    //     }
+    //     return listedButNotStakedYet;
+    // }
 
-    function getStakedNftsByUser() external returns (listing[] memory) {
-        listing[] memory listedAndStaked;
-        _userStakingCount.reset();
-        for (uint256 i = 0; i < _listingId.current(); i++) {
-            if (
-                allListedNftsByListingId[i].listerAddress == msg.sender &&
-                allListedNftsByListingId[i].isStaked == true
-            ) {
-                listedAndStaked[
-                    _userStakingCount.current()
-                ] = allListedNftsByListingId[i];
-            }
-            _userStakingCount.increment();
-        }
-        return listedAndStaked;
-    }
+    // function getStakedNftsByUser() external returns (listing[] memory) {
+    //     listing[] memory listedAndStaked;
+    //     _userStakingCount.reset();
+    //     for (uint256 i = 0; i < _listingId.current(); i++) {
+    //         if (
+    //             allListedNftsByListingId[i].listerAddress == msg.sender &&
+    //             allListedNftsByListingId[i].isStaked == true
+    //         ) {
+    //             listedAndStaked[
+    //                 _userStakingCount.current()
+    //             ] = allListedNftsByListingId[i];
+    //         }
+    //         _userStakingCount.increment();
+    //     }
+    //     return listedAndStaked;
+    // }
 }
