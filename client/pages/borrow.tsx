@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react'
 import Header from '../components/Header'
 import { useMoralis, useMoralisWeb3Api } from 'react-moralis'
 import { TransactionContext } from '../context/TransactionContext'
+import { ethers } from "ethers";
 
 const style = {
   wrapper: `bg-[#1A1A1D] h-auto min-h-screen text-black select-none flex flex-col`,
@@ -49,6 +50,11 @@ const Borrow = () => {
   const { isInitialized, user } = useMoralis()
   const Web3Api = useMoralisWeb3Api()
   const [userEthNFTs, setUserEthNFTs] = useState()
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  await provider.send("eth_requestAccounts", []);
+  const signer = provider.getSigner()
+
   useEffect(() => {
     if (isInitialized) {
       const options = {

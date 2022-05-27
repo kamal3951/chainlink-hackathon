@@ -2,6 +2,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -10,13 +19,56 @@ import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.s
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/base/LiquidityManagement.sol";
 
-contract LiquidityExamples is IERC721Receiver {
+contract LiquidityExamples is IERC721Receiver, ReentrancyGuard {
+    using Counters for Counters.Counter;
+    Counters.Counter private _listingId;
+    Counters.Counter private _listedItems;
+    Counters.Counter private _stakedItems;
+
+    Counters.Counter _userLoanCount;
+    Counters.Counter _userListingCount;
+    Counters.Counter _userStakingCount;
+    Counters.Counter _allNftsAvailableToBeStakedCount;
+
     address public constant DAI = 0xd0A1E359811322d97991E03f863a0C30C2cF029C;
     address public constant ETH = 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa;
 
     uint24 public constant poolFee = 3000;
 
-    INonfungiblePositionManager public immutable nonfungiblePositionManager;
+    address payable owner;
+
+    //Token allowed to stake - UniswapV3 LP Token
+    INonfungiblePositionManager public immutable listingToken;
+    //ERC20 allowed to lend
+    IERC20 public immutable lendingMoney;
+
+    struct listing {
+        address listerAddress;
+        uint256 tokenId;
+        uint256 LoanAmount;
+        uint256 LoanTimePeriod;
+        uint256 listingId;
+        bool isStaked;
+        address stakedTo;
+    }
+
+    event NftListed(
+        address listerAddress,
+        uint256 tokenIdListed,
+        uint256 LoanAmount,
+        uint256 LoanTimePeriod,
+        uint256 lisitngId,
+        bool isStaked,
+        address stakedTo
+    );
+
+    mapping(uint256 => listing) allListedNftsByTokenId;
+
+    //Total worth of supplied nfts
+    uint256 public totalTokenSupplyWorth;
+
+    //Total money supplied for loan
+    uint256 public totalLoanMoney;
 
     struct Deposit {
         address owner;
@@ -31,8 +83,43 @@ contract LiquidityExamples is IERC721Receiver {
     mapping(address => uint128) public borrowerToLiquidity;
     mapping(address => uint256) public borrowerToTokenId;
 
-    constructor(INonfungiblePositionManager _nonfungiblePositionManager) {
-        nonfungiblePositionManager = _nonfungiblePositionManager;
+    constructor(address _listingTokenAddress) {
+        listingToken = INonfungiblePositionManager(_listingTokenAddress);
+        //UniswapV3 Kovan Adddress
+        lendingMoney = IERC20(0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa);
+        //Kovan DAI Address
+    }
+
+    function listNft(
+        uint256 tokenId,
+        uint256 LoanAmount,
+        uint256 LoanTimePeriod
+    ) external nonReentrant {
+        _listingId.increment();
+        _listedItems.increment();
+
+        //fetch the liquidity and set amount <  liquidity/2
+        (, , , , , , ,uint128 NftLiquidity, , , , ) = listingToken.positions(tokenId);
+        require(
+            LoanAmount < NftLiquidity / 2,
+            "You can not get loan of more than 50% worth of your position's liquidity"
+        );
+
+        //listingToken.approve(address(this), tokenId);
+        //approving will be done from frontend
+        listingToken.safeTransferFrom(msg.sender, address(this), tokenId);
+
+        allListedNftsByTokenId[_listingId.current()] = listing(
+            payable(msg.sender),
+            tokenId,
+            LoanAmount,
+            LoanTimePeriod,
+            _listingId.current(),
+            false,
+            payable(msg.sender)
+        );
+
+        totalTokenSupplyWorth += uint256(NftLiquidity);
     }
 
     // Implementing `onERC721Received` so this contract can receive custody of erc721 tokens
@@ -47,6 +134,34 @@ contract LiquidityExamples is IERC721Receiver {
         _createDeposit(operator, tokenId);
 
         return this.onERC721Received.selector;
+    }
+
+    function lendMoney(uint256 listingId) external payable returns (bool) {
+        listing storage _listing = allListedNftsByTokenId[listingId];
+        require(
+            msg.value == _listing.LoanAmount,
+            "Please supply the sufficient loan amount"
+        );
+        require(
+            msg.sender != _listing.listerAddress,
+            "Seller can not buy its own tokens"
+        );
+
+        _listing.isStaked = true;
+        _listing.stakedTo = msg.sender;
+
+        lendingMoney.approve(
+            address(this),
+            allListedNftsByTokenId[listingId].LoanAmount
+        );
+
+        bool success = lendingMoney.transferFrom(
+            msg.sender,
+            address(this),
+            allListedNftsByTokenId[listingId].LoanAmount
+        );
+
+        return success;
     }
 
     function _createDeposit(address owner, uint256 tokenId) internal {
@@ -68,10 +183,10 @@ contract LiquidityExamples is IERC721Receiver {
         // set the owner and data for position
         // operator is msg.sender
         deposits[tokenId] = Deposit({
-            liquidity: liquidity,
-            owner: owner,
-            token0: token0,
-            token1: token1
+            liquidity,
+            owner,
+            token0,
+            token1
         });
     }
 
@@ -143,5 +258,59 @@ contract LiquidityExamples is IERC721Receiver {
         TransferHelper.safeTransfer(DAI, borrowerToLender[borrower], loanAmt);
 
         //collectAllFees(borrowerToTokenId[borrower]);
+    }
+
+
+
+
+    //Getter functions
+    function getListedNftsByUser() external returns (listing[] memory) {
+        listing[] memory listedButNotStakedYet;
+        _userListingCount.reset();
+        for (uint256 i = 0; i < _listingId.current(); i++) {
+            if (
+                allListedNftsByTokenId[i].listerAddress == msg.sender &&
+                allListedNftsByTokenId[i].isStaked == false
+            ) {
+                listedButNotStakedYet[
+                    _userListingCount.current()
+                ] = allListedNftsByTokenId[i];
+            }
+            _userListingCount.increment();
+        }
+        return listedButNotStakedYet;
+    }
+
+    function getStakedNftsByUser() external returns (listing[] memory) {
+        listing[] memory listedAndStaked;
+        _userStakingCount.reset();
+        for (uint256 i = 0; i < _listingId.current(); i++) {
+            if (
+                allListedNftsByTokenId[i].listerAddress == msg.sender &&
+                allListedNftsByTokenId[i].isStaked == true
+            ) {
+                listedAndStaked[
+                    _userStakingCount.current()
+                ] = allListedNftsByTokenId[i];
+            }
+            _userStakingCount.increment();
+        }
+        return listedAndStaked;
+    }
+
+    function getAllNftsListedAvailableToBeStaked()
+        external
+        returns (listing[] memory)
+    {
+        listing[] memory AllNftsListedAvailableToBeStaked;
+        _allNftsAvailableToBeStakedCount.reset();
+        for (uint256 i = 0; i < _listingId.current(); i++) {
+            if (allListedNftsByTokenId[i].isStaked == false) {
+                AllNftsListedAvailableToBeStaked[
+                    _allNftsAvailableToBeStakedCount.current()
+                ] = allListedNftsByTokenId[i];
+            }
+        }
+        return AllNftsListedAvailableToBeStaked;
     }
 }

@@ -3,22 +3,17 @@ pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
-
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
-
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 //error p2p__TransferFailed();
 
-contract p2p is IERC721Receiver, ReentrancyGuard {
+contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _listingId;
     Counters.Counter private _listedItems;
@@ -161,6 +156,7 @@ contract p2p is IERC721Receiver, ReentrancyGuard {
         return ListingThatIsLended;
     }
 
+    //Getter functions
     function getListedNftsByUser() external returns (listing[] memory) {
         listing[] memory listedButNotStakedYet;
         _userListingCount.reset();
