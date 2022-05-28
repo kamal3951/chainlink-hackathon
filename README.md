@@ -1,5 +1,5 @@
 [![built-with openzeppelin](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://docs.openzeppelin.com/)
-[![built-with Uniswap](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://github.com/Uniswap)
+[![built-with Uniswap](https://img.shields.io/badge/built%20with-Uniswap-3677FF)](https://github.com/Uniswap)
 
 # UniswapV3 NFTs as a collateral for loans
 
