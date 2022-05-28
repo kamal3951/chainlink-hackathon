@@ -210,5 +210,6 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
             borrower,
             borrowerToTokenId[borrower]
         );
+        collectFees(borrowerToTokenId[borrower]);
     }
 }
