@@ -4,6 +4,7 @@ import { useMoralis } from 'react-moralis'
 export const TransactionContext = React.createContext()
 
 export const TransactionProvider = ({ children }) => {
+  const contractAddress = '0x3E2DE52E5A1bc16AAf58F5AB6D50A7CCf2D90820'
   const [currentUser, setCurrentUser] = useState()
   const { authenticate, isAuthenticated, user, logout } = useMoralis()
   const logIn = async () => {
@@ -29,7 +30,7 @@ export const TransactionProvider = ({ children }) => {
   }
 
   return (
-    <TransactionContext.Provider value={{ logIn, currentUser, logOut }}>
+    <TransactionContext.Provider value={{ logIn, currentUser, logOut, contractAddress }}>
       {children}
     </TransactionContext.Provider>
   )

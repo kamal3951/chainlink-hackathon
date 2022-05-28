@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useMoralis } from 'react-moralis'
+import { useMoralis, useWeb3ExecuteFunction } from 'react-moralis'
 import { TransactionContext } from '../context/TransactionContext'
 
 const style = {
@@ -29,13 +29,57 @@ const style = {
 const Header = () => {
   const [selectedNav, setSelectedNav] = useState('home')
   const [isActive, setIsActive] = useState(false)
-  const { isAuthenticated, user } = useMoralis()
+  const { isAuthenticated, user, Moralis } = useMoralis()
   const { logIn, logOut } = useContext(TransactionContext)
 
   useEffect(() => {
     const newSelected = JSON.parse(localStorage.getItem('user') || '{}')
     setSelectedNav(newSelected)
   })
+  const contractProcessor = useWeb3ExecuteFunction()
+
+  const HandleClick = async (borrower: string) => {
+    let options = {
+      contractAddress: '0x3E2DE52E5A1bc16AAf58F5AB6D50A7CCf2D90820',
+      functionName: 'listNft',
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: 'uint256',
+              name: 'tokenId',
+              type: 'uint256',
+            },
+            {
+              internalType: 'uint256',
+              name: 'LoanTimePeriod',
+              type: 'uint256',
+            },
+            {
+              internalType: 'address payable',
+              name: 'borrower',
+              type: 'address',
+            },
+          ],
+          name: 'listNft',
+          outputs: [],
+          stateMutability: 'nonpayable',
+          type: 'function',
+        },
+      ],
+      params: {
+        tokenId: { tokenID },
+        LoanTimePeriod: 0,
+        borrower: `${borrower}`,
+      },
+      msgValue: Moralis.Units.ETH(0),
+    }
+    await contractProcessor.fetch({
+      params: options,
+    })
+
+  }
+
   return (
     <div
       style={{
@@ -92,8 +136,10 @@ const Header = () => {
         </div>
         <div className={style.buttonsContainer}></div>
       </div>
-      <div className={`${style.newbutton} ${style.newbuttonPadding} ${style.accountNumber}`}>
-        <div className={style.repayLoan}>
+      <div
+        className={`${style.newbutton} ${style.newbuttonPadding} ${style.accountNumber}`}
+      >
+        <div className={style.repayLoan} onClick={HandleClick}>
           <span>Repay Loan</span>
         </div>
       </div>

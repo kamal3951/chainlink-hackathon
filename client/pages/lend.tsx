@@ -1,8 +1,13 @@
 import React, { useEffect, useState, useContext } from 'react'
 import Header from '../components/Header'
-import { useMoralis, useMoralisWeb3Api } from 'react-moralis'
+import {
+  useMoralis,
+  useMoralisSolanaCall,
+  useMoralisWeb3Api,
+  useWeb3ExecuteFunction,
+} from 'react-moralis'
 import Modal from 'react-modal'
-import { useWeb3Transfer } from "react-moralis";
+import { TransactionContext } from '../context/TransactionContext'
 
 const style = {
   wrapper: `bg-[#1A1A1D] h-auto min-h-screen text-black select-none flex flex-col`,
@@ -18,8 +23,6 @@ const style = {
   tokenId: `text-white text-mono text-2xl break-all`,
 }
 
-
-
 function fixUrl(url: string) {
   if (url?.startsWith('ipfs')) {
     return (
@@ -31,11 +34,40 @@ function fixUrl(url: string) {
 }
 
 const NFTCard = ({ nft, label }) => {
+  const { user, Moralis } = useMoralis()
+  const lender = user?.get('ethAddress')
   const [isopen, setIsopen] = useState(false)
-  if (!nft?.metadata) return <></>
   const nftData = JSON?.parse(nft?.metadata)
   console.log(nftData)
   console.log(fixUrl(nftData?.image))
+  const contractProcessor = useWeb3ExecuteFunction()
+
+  async function lendMoney(tokenId: number) {
+    let options = {
+      contractAddress: '0x3E2DE52E5A1bc16AAf58F5AB6D50A7CCf2D90820',
+      functionName: 'lendMoney',
+      abi: [
+        {
+          inputs: [
+            { internalType: 'uint256', name: 'tokenId', type: 'uint256' },
+            { internalType: 'address', name: 'lender', type: 'address' },
+          ],
+          name: 'lendMoney',
+          outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+          stateMutability: 'payable',
+          type: 'function',
+        },
+      ],
+      params: {
+        tokenId: { tokenId },
+        lender: { lender },
+      },
+      msgValue: Moralis.Units.ETH(0.1)
+    }
+    await contractProcessor.fetch({
+      params: options,
+    })
+  }
 
   return (
     <>
@@ -91,7 +123,7 @@ const NFTCard = ({ nft, label }) => {
           X
         </div>
         <div className={style.timeInputLabel}>
-          Lend 50% of Liquidity for NFT with 
+          Lend 50% of Liquidity for NFT with
         </div>
         <div className={style.tokenId}>Token ID - {nft?.token_id}</div>
         <div
@@ -104,7 +136,11 @@ const NFTCard = ({ nft, label }) => {
             height: '150px',
           }}
         >
-          <button className={style.submitButton} type="submit">
+          <button
+            className={style.submitButton}
+            type="submit"
+            onClick={() => lendMoney(nft?.token_id)}
+          >
             Proceed
           </button>
         </div>
@@ -114,14 +150,16 @@ const NFTCard = ({ nft, label }) => {
 }
 
 const Lend = () => {
-  const { isInitialized, user } = useMoralis()
+  const { contractAddress } = useContext(TransactionContext)
+  const { isInitialized, isWeb3Enabled, enableWeb3 } = useMoralis()
   const Web3Api = useMoralisWeb3Api()
   const [userEthNFTs, setUserEthNFTs] = useState()
   useEffect(() => {
+    if (!isWeb3Enabled) enableWeb3()
     if (isInitialized) {
       const options = {
         chain: 'rinkeby',
-        address: '0xCaE2DBf72cABfC7ee135256ff56FDc216a2a419A',
+        address: `${contractAddress}`,
       }
       Web3Api.account.getNFTs(options).then((res) => {
         setUserEthNFTs(res?.result)
