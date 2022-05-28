@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
-//error p2p__TransferFailed();
+import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV3Interface.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -26,13 +26,27 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
     Counters.Counter _allNftsAvailableToBeStakedCount;
 
     address payable owner;
+    address public constant USDC = 0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b;
 
     //Token allowed to stake
     INonfungiblePositionManager public constant listingToken =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
     //ERC20 allowed to lend
-    IERC20 public constant lendingMoney =
-        IERC20(0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa);
+    IERC20 public immutable lendingMoney = IERC20(USDC);
+
+    AggregatorV3Interface internal priceFeed =
+        AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
+
+    function getLoanInUsd(uint256 tokenId) public view returns (uint256) {
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        (, , , , , , , uint128 NftLiquidity, , , , ) = listingToken.positions(
+            tokenId
+        );
+
+        uint256 NftLoanInUsd = (uint256(NftLiquidity) * uint256(price)) /
+            10**18;
+        return NftLoanInUsd / 2;
+    }
 
     mapping(address => address) public borrowerToLender;
     mapping(address => uint128) public borrowerToLiquidity;
@@ -81,13 +95,19 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
         allListedNftsByListingId[_listingId.current()] = listing(
             borrower,
             tokenId,
-            NftLiquidity / 2,
+            getLoanInUsd(tokenId),
             LoanTimePeriod,
             _listingId.current(),
             false
         );
 
         totalTokenSupplyWorth += uint256(NftLiquidity);
+        tokenIdToListingId[tokenId] = _listingId.current();
+
+        borrowerToLender[borrower] = address(0);
+        borrowerToLiquidity[borrower] = NftLiquidity;
+        borrowerToTokenId[borrower] = tokenId;
+        tokenIdToBorrower[tokenId] = borrower;
         tokenIdToListingId[tokenId] = _listingId.current();
     }
 
@@ -110,10 +130,7 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
     {
         uint256 listingId = tokenIdToListingId[tokenId];
         listing storage _listing = allListedNftsByListingId[listingId];
-        require(
-            msg.value == _listing.LoanAmount,
-            "Please supply the sufficient loan amount"
-        );
+
         require(
             lender != _listing.listerAddress,
             "Seller can not buy its own tokens"
@@ -123,59 +140,75 @@ contract UniV3NftLoan is IERC721Receiver, ReentrancyGuard {
 
         bool success = lendingMoney.transferFrom(
             lender,
-            address(this),
+            _listing.listerAddress,
             allListedNftsByListingId[listingId].LoanAmount
         );
+
+        borrowerToLender[_listing.listerAddress] = lender;
 
         return success;
     }
 
-    //Getter functions
-    // function getLoansDispersedByUser() external returns (listing[] memory) {
-    //     listing[] memory ListingThatIsLended;
-    //     _userLoanCount.reset();
-    //     // for (uint256 i = 0; i < _listingId.current(); i++) {
-    //     //     if (allListedNftsByListingId[i].stakedTo == msg.sender) {
-    //     //         ListingThatIsLended[
-    //     //             _userLoanCount.current()
-    //     //         ] = allListedNftsByListingId[i];
-    //     //     }
-    //     //     _userLoanCount.increment();
-    //     // }
-    //     return ListingThatIsLended;
-    // }
+    /// @notice Collects the fees associated with provided liquidity
+    /// @dev The contract must hold the erc721 token before it can collect fees
+    /// @param tokenId The id of the erc721 token
+    /// @return amount0 The amount of fees collected in token0
+    /// @return amount1 The amount of fees collected in token1
+    function collectFees(uint256 tokenId)
+        internal
+        returns (uint256 amount0, uint256 amount1)
+    {
+        listingToken.safeTransferFrom(msg.sender, address(this), tokenId);
 
-    // function getListedNftsByUser() external returns (listing[] memory) {
-    //     listing[] memory listedButNotStakedYet;
-    //     _userListingCount.reset();
-    //     for (uint256 i = 0; i < _listingId.current(); i++) {
-    //         if (
-    //             allListedNftsByListingId[i].listerAddress == msg.sender &&
-    //             allListedNftsByListingId[i].isStaked == false
-    //         ) {
-    //             listedButNotStakedYet[
-    //                 _userListingCount.current()
-    //             ] = allListedNftsByListingId[i];
-    //         }
-    //         _userListingCount.increment();
-    //     }
-    //     return listedButNotStakedYet;
-    // }
+        INonfungiblePositionManager.CollectParams
+            memory params = INonfungiblePositionManager.CollectParams({
+                tokenId: tokenId,
+                recipient: msg.sender,
+                amount0Max: type(uint128).max,
+                amount1Max: type(uint128).max
+            });
 
-    // function getStakedNftsByUser() external returns (listing[] memory) {
-    //     listing[] memory listedAndStaked;
-    //     _userStakingCount.reset();
-    //     for (uint256 i = 0; i < _listingId.current(); i++) {
-    //         if (
-    //             allListedNftsByListingId[i].listerAddress == msg.sender &&
-    //             allListedNftsByListingId[i].isStaked == true
-    //         ) {
-    //             listedAndStaked[
-    //                 _userStakingCount.current()
-    //             ] = allListedNftsByListingId[i];
-    //         }
-    //         _userStakingCount.increment();
-    //     }
-    //     return listedAndStaked;
-    // }
+        (amount0, amount1) = listingToken.collect(params);
+
+        _sendToLender(tokenId, amount0, amount1);
+    }
+
+    /// @notice Transfers funds to owner of NFT
+    /// @param tokenId The id of the erc721
+    /// @param amount0 The amount of token0
+    /// @param amount1 The amount of token1
+    function _sendToLender(
+        uint256 tokenId,
+        uint256 amount0,
+        uint256 amount1
+    ) internal {
+        (, , address token0, address token1, , , , , , , , ) = listingToken
+            .positions(tokenId);
+
+        address borrower = tokenIdToBorrower[tokenId];
+        TransferHelper.safeTransfer(
+            token0,
+            borrowerToLender[borrower],
+            amount0 / 2
+        );
+        TransferHelper.safeTransfer(
+            token1,
+            borrowerToLender[borrower],
+            amount1 / 2
+        );
+    }
+
+    function repayLoan(address borrower) public payable {
+        require(borrower == msg.sender);
+        lendingMoney.transferFrom(
+            borrower,
+            borrowerToLender[borrower],
+            getLoanInUsd(borrowerToTokenId[borrower])
+        );
+        listingToken.safeTransferFrom(
+            address(this),
+            borrower,
+            borrowerToTokenId[borrower]
+        );
+    }
 }

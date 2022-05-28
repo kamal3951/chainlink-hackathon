@@ -19,6 +19,7 @@
     "hardhat": "^2.9.4"
   },
   "dependencies": {
+    "@chainlink/contracts": "^0.4.1",
     "@uniswap/v3-periphery": "^1.4.1"
   }
 }

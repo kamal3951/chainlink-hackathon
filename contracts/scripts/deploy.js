@@ -14,13 +14,13 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const p2p = await hre.ethers.getContractFactory("p2p");
+  const UniV3NftLoan = await hre.ethers.getContractFactory("UniV3NftLoan");
   console.log("Hello");
-  const _p2p = await p2p.deploy("0xC36442b4a4522E871399CD717aBDD847Ab11FE88");
+  const uniV3NftLoan = await UniV3NftLoan.deploy();
 
-  await _p2p.deployed();
+  await uniV3NftLoan.deployed();
 
-  console.log("Contract deployed to:", _p2p.address);
+  console.log("Contract deployed to:", uniV3NftLoan.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
