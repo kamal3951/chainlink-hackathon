@@ -17,7 +17,10 @@ All the UniswapV3 LP NFTs owned by the user are listed on the Borrow page, the u
 All the NFTs that are listed by all the users over the platfrom are displayed on the `Lend` page.
 The user can provide loan in USDC to the NFT owners, getting returns from the fees earned on that NFT from Uniswap.
 
-# How to run the dapp
+
+
+# How to run the dapp![Screenshot (1182)](https://user-images.githubusercontent.com/77496267/170834392-3f10da44-dbcc-4b30-acd6-7a4e53a7ec01.png)
+
 1. Clone the project
 2. Run `yarn install` in the client directory
 4. Run `yarn dev` in the client directory.
