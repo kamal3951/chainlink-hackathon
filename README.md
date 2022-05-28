@@ -19,7 +19,7 @@ The `LoanAmount` must be less than the 50% value of the LP Token i.e., NFT's und
 All the NFTs that are listed by all the users over the platfrom are displayed on the `Lend` page.
 The user can provide loan in DAI to the NFT owners, getting returns from the interest earned from that NFT from Uniswap.
 
-#How to run the dapp
+# How to run the dapp
 1. Clone the project
 2. Run `yarn install` in the client directory
 4. Run `yarn dev` in the client directory.
